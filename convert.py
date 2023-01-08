@@ -9,6 +9,7 @@ Script to convert csv file to YNAB expected format
 import argparse
 import csv
 import re
+from pathlib import Path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parse ')
@@ -16,9 +17,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    with open(args.path, "r") as infile:
-        # TODO: Change it to an argument? Or convert it from input
-        with open("./output.csv", "w") as outfile:
+    inpath = Path(args.path)
+    outpath = Path("output_" + inpath.name)
+
+    print(f"Converted data will be stored in: {outpath}")
+
+    with open(inpath, "r") as infile:
+        with open(outpath, "w") as outfile:
             reader = csv.reader(infile)
             writer = csv.DictWriter(
                 outfile, ["Date", "Payee", "Memo", "Inflow", "Outflow"])
