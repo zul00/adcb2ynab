@@ -11,6 +11,23 @@ import csv
 import re
 from pathlib import Path
 
+
+def get_update_date(input_file):
+    re_update_date = re.compile(r"^.*To (\d{2})/(\d{2})/(\d{4})")
+
+    with open(input_file, "r") as infile:
+        reader = csv.reader(infile)
+        for row in reader:
+            for column in row:
+                str = re_update_date.match(column)
+                if str is not None:
+                    day = str[1]
+                    month = str[2]
+                    year = str[3]
+
+    return year, month, day
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parse ')
     parser.add_argument('path', type=str, help='Path to the csv file.')
@@ -18,7 +35,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     inpath = Path(args.path)
-    outpath = Path("output_" + inpath.name)
+    year, month, date = get_update_date(inpath)
+    outpath = Path(f"output_{inpath.stem}_{year}{month}{date}{inpath.suffix}")
 
     print(f"Converted data will be stored in: {outpath}")
 
