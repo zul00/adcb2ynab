@@ -28,6 +28,17 @@ def get_update_date(input_file):
     return year, month, day
 
 
+def process_cc_data(row):
+    outflow = 0
+    inflow = 0
+    if row[2] == "DR":
+        outflow = row[3]
+    elif row[2] == "CR":
+        inflow = row[3]
+
+    return outflow, inflow
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parse ')
     parser.add_argument('path', type=str, help='Path to the csv file.')
@@ -51,12 +62,9 @@ if __name__ == "__main__":
             for row in reader:
                 for column in row:
                     if re_date.match(column):
-                        outflow = 0
-                        inflow = 0
-                        if row[2] == "DR":
-                            outflow = row[3]
-                        elif row[2] == "CR":
-                            inflow = row[3]
+                        # It shows len(row)==4 for CC account
+                        # Other than that, it has "Primary Card Number" string
+                        outflow, inflow = process_cc_data(row)
 
                         writer.writerow(
                             {"Date": row[0], "Payee": "", "Memo": row[1],
