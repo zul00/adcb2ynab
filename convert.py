@@ -51,21 +51,22 @@ if __name__ == "__main__":
 
     print(f"Converted data will be stored in: {outpath}")
 
-    with open(inpath, "r") as infile:
-        with open(outpath, "w") as outfile:
-            reader = csv.reader(infile)
-            writer = csv.DictWriter(
-                outfile, ["Date", "Payee", "Memo", "Inflow", "Outflow"])
-            writer.writeheader()
+    if inpath.stem in ["touchpoint", "traveller"]:
+        with open(inpath, "r") as infile:
+            with open(outpath, "w") as outfile:
+                reader = csv.reader(infile)
+                writer = csv.DictWriter(
+                    outfile, ["Date", "Payee", "Memo", "Inflow", "Outflow"])
+                writer.writeheader()
 
-            re_date = re.compile(r"\d{2}/\d{2}/\d{4}")
-            for row in reader:
-                for column in row:
-                    if re_date.match(column):
-                        # It shows len(row)==4 for CC account
-                        # Other than that, it has "Primary Card Number" string
-                        outflow, inflow = process_cc_data(row)
+                re_date = re.compile(r"\d{2}/\d{2}/\d{4}")
+                for row in reader:
+                    for column in row:
+                        if re_date.match(column):
+                            # It shows len(row)==4 for CC account
+                            # Other than that, it has "Primary Card Number" string
+                            outflow, inflow = process_cc_data(row)
 
-                        writer.writerow(
-                            {"Date": row[0], "Payee": "", "Memo": row[1],
-                             "Inflow": inflow, "Outflow": outflow})
+                            writer.writerow(
+                                {"Date": row[0], "Payee": "", "Memo": row[1],
+                                 "Inflow": inflow, "Outflow": outflow})
