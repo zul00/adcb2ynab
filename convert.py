@@ -70,3 +70,20 @@ if __name__ == "__main__":
                             writer.writerow(
                                 {"Date": row[0], "Payee": "", "Memo": row[1],
                                  "Inflow": inflow, "Outflow": outflow})
+    else:
+        with open(inpath, "r") as infile:
+            with open(outpath, "w") as outfile:
+                reader = csv.reader(infile)
+                writer = csv.DictWriter(
+                    outfile, ["Date", "Payee", "Memo", "Inflow", "Outflow"])
+                writer.writeheader()
+
+                re_date = re.compile(r"\d{2}/\d{2}/\d{4}")
+                for row in reader:
+                    if re_date.match(row[1]):
+                        outflow = row[4]
+                        inflow = row[5]
+
+                        writer.writerow(
+                            {"Date": row[1], "Payee": "", "Memo": row[3],
+                             "Inflow": inflow, "Outflow": outflow})
