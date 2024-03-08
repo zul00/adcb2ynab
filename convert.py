@@ -39,6 +39,13 @@ def process_cc_data(row):
     return outflow, inflow
 
 
+def process_bank_data(row):
+    outflow = row[4]
+    inflow = row[5]
+
+    return outflow, inflow
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parse ')
     parser.add_argument('path', type=str, help='Path to the csv file.')
@@ -63,8 +70,6 @@ if __name__ == "__main__":
                 for row in reader:
                     for column in row:
                         if re_date.match(column):
-                            # It shows len(row)==4 for CC account
-                            # Other than that, it has "Primary Card Number" string
                             outflow, inflow = process_cc_data(row)
 
                             writer.writerow(
@@ -81,8 +86,7 @@ if __name__ == "__main__":
                 re_date = re.compile(r"\d{2}/\d{2}/\d{4}")
                 for row in reader:
                     if re_date.match(row[1]):
-                        outflow = row[4]
-                        inflow = row[5]
+                        outflow, inflow = process_bank_data(row)
 
                         writer.writerow(
                             {"Date": row[1], "Payee": "", "Memo": row[3],
