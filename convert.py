@@ -11,6 +11,8 @@ import csv
 import re
 from pathlib import Path
 
+import pandas as pd
+
 
 def get_update_date(input_file):
     re_update_date = re.compile(r"^.*To (\d{2})/(\d{2})/(\d{4})")
@@ -28,22 +30,15 @@ def get_update_date(input_file):
     return year, month, day
 
 
-def process_cc_data(row):
+def process_cc_data_df(row):
     outflow = 0
     inflow = 0
-    if row[2] == "DR":
-        outflow = row[3]
-    elif row[2] == "CR":
-        inflow = row[3]
+    if row.Dir == "CR":
+        inflow = row.Val
+    elif row.Dir == "DR":
+        outflow = row.Val
 
-    return outflow, inflow
-
-
-def process_bank_data(row):
-    outflow = row[4]
-    inflow = row[5]
-
-    return outflow, inflow
+    return pd.Series([inflow, outflow])
 
 
 if __name__ == "__main__":
@@ -58,29 +53,26 @@ if __name__ == "__main__":
 
     print(f"Converted data will be stored in: {outpath}")
 
-    with open(inpath, "r") as infile:
-        with open(outpath, "w") as outfile:
-            reader = csv.reader(infile)
-            writer = csv.DictWriter(
-                outfile, ["Date", "Payee", "Memo", "Inflow", "Outflow"])
-            writer.writeheader()
+    column_name = ["Date", "Payee", "Memo", "Inflow", "Outflow"]
+    if inpath.stem in ["diff_touchpoint", "diff_traveller"]:
+        csv_df = pd.read_csv(str(inpath.resolve()),
+                             names=["Date", "Memo", "Dir", "Val"],
+                             dtype={'Val': str},
+                             skiprows=[0])
+        df = pd.DataFrame(csv_df, columns=column_name[:3])
+        df[column_name[3:]] = csv_df.apply(process_cc_data_df, axis=1)
 
-            if inpath.stem in ["touchpoint", "traveller"]:
-                re_date = re.compile(r"\d{2}/\d{2}/\d{4}")
-                for row in reader:
-                    for column in row:
-                        if re_date.match(column):
-                            outflow, inflow = process_cc_data(row)
+    else:
+        csv_df = pd.read_csv(str(inpath.resolve()),
+                             names=["Date", "ValueDate", "Ref", "Memo",
+                                    "Outflow", "Inflow", "Balance"],
+                             dtype={'Outflow': str, 'Inflow': str},
+                             skiprows=[0, 1])
+        __import__('ipdb').set_trace()
 
-                            writer.writerow(
-                                {"Date": row[0], "Payee": "", "Memo": row[1],
-                                 "Inflow": inflow, "Outflow": outflow})
-            else:
-                re_date = re.compile(r"\d{2}/\d{2}/\d{4}")
-                for row in reader:
-                    if re_date.match(row[1]):
-                        outflow, inflow = process_bank_data(row)
+        df = pd.DataFrame(csv_df, columns=column_name)
 
-                        writer.writerow(
-                            {"Date": row[1], "Payee": "", "Memo": row[3],
-                             "Inflow": inflow, "Outflow": outflow})
+    df = df.fillna('')
+    # TODO: Convert to the real filename
+    df.to_csv("test.csv", index=False)
+    print(df)
